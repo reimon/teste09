@@ -11,59 +11,27 @@ export default class OrdersController {
 
     const findOrder = container.resolve(FindOrderService);
 
-    const order = await findOrder.execute({ id });
-
-    const products = order?.orders_products.map(product => {
-      return {
-        product_id: product.product_id,
-        price: product.price,
-        quantity: product.quantity,
-      };
+    const order = await findOrder.execute({
+      id,
     });
 
-    const customer = {
-      id: order?.customer.id,
-      name: order?.customer.name,
-      email: order?.customer.email,
-    };
-
-    const newOrder = {
-      customer,
-      orders_products: products,
-    };
-
-    return response.json(newOrder);
+    return response.json(order);
   }
 
   public async create(request: Request, response: Response): Promise<Response> {
-    const { customer_id, products } = request.body;
+    try {
+      const { customer_id, products } = request.body;
 
-    const createOrder = await container.resolve(CreateOrderService);
+      const createOrder = container.resolve(CreateOrderService);
 
-    const order = await createOrder.execute({
-      customer_id,
-      products,
-    });
+      const order = await createOrder.execute({
+        customer_id,
+        products,
+      });
 
-    const newProducts = order?.orders_products.map(product => {
-      return {
-        product_id: product.product_id,
-        price: product.price,
-        quantity: product.quantity,
-      };
-    });
-
-    const customer = {
-      id: order?.customer.id,
-      name: order?.customer.name,
-      email: order?.customer.email,
-    };
-
-    const newOrder = {
-      customer,
-      orders_products: newProducts,
-    };
-
-    return response.json(newOrder);
+      return response.json(order);
+    } catch (err) {
+      return response.status(400).json({ error: err.message });
+    }
   }
 }
